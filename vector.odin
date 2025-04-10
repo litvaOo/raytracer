@@ -20,3 +20,6 @@ unit_vector :: proc(v1: ^Vector) -> Vector {
   return v1^ / vector_length(v1)
 }
 
+vector_dot :: proc(v1: ^Vector, v2: ^Vector) -> f64 {
+  return v1.x*v2.x + v1.y*v2.y + v1.z*v2.z
+}
