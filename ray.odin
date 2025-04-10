@@ -31,13 +31,13 @@ ray_color :: proc(r: ^Ray) -> u32 {
 
 sphere_hit :: proc(center: ^Vector, radius: f64, ray: ^Ray) -> f64 {
   origin_to_center := center^ - ray.origin^
-  a := vector_dot(ray.direction, ray.direction)
-  b := -2.0 * vector_dot(ray.direction, &origin_to_center)
-  c := vector_dot(&origin_to_center, &origin_to_center) - radius*radius
-  discriminant := b*b - 4.0*a*c
+  a := vector_length_squared(ray.direction)
+  h := vector_dot(ray.direction, &origin_to_center)
+  c := vector_length_squared(&origin_to_center) - radius*radius
+  discriminant := h*h - a*c
   if discriminant < 0 {
     return -1.0
   } else {
-    return (-b - math.sqrt(discriminant))/(2.0*a)
+    return (h - math.sqrt(discriminant))/a
   }
 }

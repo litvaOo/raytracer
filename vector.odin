@@ -5,7 +5,11 @@ import "core:math"
 Vector :: distinct[3]f64
 
 vector_length :: proc (v: ^Vector) -> f64 {
-  return math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z)
+  return math.sqrt(vector_length_squared(v))
+}
+
+vector_length_squared :: proc (v: ^Vector) -> f64 {
+  return v.x*v.x + v.y*v.y + v.z*v.z
 }
 
 vector_cross :: proc(v1: ^Vector, v2: ^Vector) -> Vector {

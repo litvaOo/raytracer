@@ -60,5 +60,5 @@ main :: proc() {
   }
   sdl3.RenderPresent(renderer)
   
-  sdl3.Delay(1000)
+  // sdl3.Delay(1000)
 }
