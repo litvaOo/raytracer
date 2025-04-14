@@ -17,6 +17,8 @@ FOCAL_LENGTH :: 1.0
 SAMPLES_PER_PIXEL :: 10
 PIXEL_SAMPLE_SCALE :: 1.0/SAMPLES_PER_PIXEL
 
+MAX_DEPTH :: 50
+
 main :: proc() {
   // SDL_INIT
   assert(sdl3.Init(sdl3.INIT_VIDEO) == true, strings.clone_from_cstring(sdl3.GetError()))
@@ -31,8 +33,13 @@ main :: proc() {
 
   assert(sdl3.SetRenderDrawBlendMode(renderer, sdl3.BlendMode{.BLEND}) == true, strings.clone_from_cstring(sdl3.GetError()))
 
-  color_buffer := [u32(WINDOW_WIDTH*WINDOW_HEIGHT)]u32{}
-  texture := sdl3.CreateTexture(renderer, sdl3.PixelFormat.RGBA8888, sdl3.TextureAccess.STREAMING, WINDOW_WIDTH, WINDOW_HEIGHT) 
+  color_buffer := make([dynamic]u32, u32(WINDOW_HEIGHT*WINDOW_WIDTH), context.allocator)
+  texture := sdl3.CreateTexture(
+    renderer,
+    sdl3.PixelFormat.RGBA8888,
+    sdl3.TextureAccess.STREAMING,
+    WINDOW_WIDTH,
+    WINDOW_HEIGHT) 
 
   // CAMERA
   camera_center := Vector{0, 0, 0}
@@ -58,13 +65,13 @@ main :: proc() {
       pixel_color_vector := Vector{0, 0, 0}
       for sample := 0; sample < SAMPLES_PER_PIXEL; sample += 1 {
         ray := get_ray(f64(i), f64(j), pixel_xy_loc, pixel_delta_u, pixel_delta_v, &camera_center)
-        pixel_color_vector += ray_color(&ray, &world)
+        pixel_color_vector += ray_color(&ray, &world, MAX_DEPTH)
       }
       pixel_color_vector *= PIXEL_SAMPLE_SCALE
       pixel_color := convert_vector_to_color(&pixel_color_vector)
       color_buffer[WINDOW_WIDTH*j+i] = pixel_color
     }
-    sdl3.UpdateTexture(texture, nil, &color_buffer, WINDOW_WIDTH*size_of(u32))
+    sdl3.UpdateTexture(texture, nil, raw_data(color_buffer), WINDOW_WIDTH*size_of(u32))
     sdl3.RenderTexture(renderer, texture, nil, nil)
     sdl3.RenderPresent(renderer)
   }
