@@ -45,13 +45,18 @@ main :: proc() {
   viewport_upper_left := camera_center - Vector{0, 0, FOCAL_LENGTH} - viewport_u/2 - viewport_v/2 
   pixel_xy_loc := viewport_upper_left + 0.5*(pixel_delta_u+pixel_delta_v)
 
+  world := [2]Hittable{
+    Sphere{Vector{0, 0, -1}, 0.5},
+    Sphere{Vector{0, -100.5, -1}, 100}
+  }
+
   for j := 0; j < WINDOW_HEIGHT; j += 1 {
     for i := 0; i < WINDOW_WIDTH; i += 1 {
       pixel_center := pixel_xy_loc + (f64(i) * pixel_delta_u) + (f64(j) * pixel_delta_v)
       ray_direction := pixel_center - camera_center
       r := Ray{&camera_center, &ray_direction}
       
-      pixel_color := ray_color(&r)
+      pixel_color := ray_color(&r, &world)
       color_buffer[WINDOW_WIDTH*j+i] = pixel_color
     }
     sdl3.UpdateTexture(texture, nil, &color_buffer, WINDOW_WIDTH*size_of(u32))
@@ -60,5 +65,5 @@ main :: proc() {
   }
   sdl3.RenderPresent(renderer)
   
-  // sdl3.Delay(1000)
+  sdl3.Delay(1000)
 }
