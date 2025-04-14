@@ -39,6 +39,10 @@ ray_color :: proc(ray: ^Ray, world: ^[4]Hittable, depth: u32) -> Vector {
         if lambertian_scatter(ray, &hit_rec, &attenuation, &scattered, &mat) == true
           { return attenuation * ray_color(&scattered, world, depth-1) }
         return Vector{0,0,0}
+      case Dielectric:
+        if dielectric_scatter(ray, &hit_rec, &attenuation, &scattered, &mat) == true
+          { return attenuation * ray_color(&scattered, world, depth-1) }
+        return Vector{0,0,0}
     }
   }
   unit_direction := unit_vector(ray.direction)

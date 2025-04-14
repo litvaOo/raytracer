@@ -1,6 +1,7 @@
 package raytracer
 
 import "core:math"
+import "core:fmt"
 
 HitRecord :: struct {
   p: Vector,
@@ -23,6 +24,10 @@ Sphere :: struct {
 }
 
 sphere_hit :: proc (sphere: ^Sphere, ray: ^Ray, ray_t_min: f64, ray_t_max: f64, rec: ^HitRecord) -> bool {
+  //fmt.println("sphere.center")
+  //fmt.println(sphere.center)
+  //fmt.println("ray.origin^")
+  //fmt.println(ray.origin^)
   origin_to_center := sphere.center - ray.origin^
   a := vector_length_squared(ray.direction)
   h := vector_dot(ray.direction, &origin_to_center)

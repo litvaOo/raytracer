@@ -64,3 +64,11 @@ near_zero :: proc(vec: ^Vector) -> bool {
 reflect :: proc(vec: ^Vector, normal: ^Vector) -> Vector {
   return vec^ - 2*vector_dot(vec, normal)*normal^
 }
+
+refract :: proc(uv, normal: ^Vector, etai_over_etat: f64) -> Vector {
+  negative_uv := -uv^
+  cos_theta := math.min(vector_dot(&negative_uv, normal), 1.0)
+  r_out_perpendicular := etai_over_etat * (uv^ + cos_theta*normal^)
+  r_out_parallel := -math.sqrt(abs(1.0 - vector_length_squared(&r_out_perpendicular))) * normal^
+  return r_out_perpendicular + r_out_parallel
+}

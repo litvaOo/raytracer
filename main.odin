@@ -58,7 +58,8 @@ main :: proc() {
   material_ground, material_center, material_left, material_right : Material
   material_ground = Lambertian{Vector{0.8, 0.8, 0.0}}
   material_center = Lambertian{Vector{0.1, 0.2, 0.5}}
-  material_left = Metal{Vector{0.8, 0.8, 0.8}, 0.3}
+  material_left = Dielectric{1.5}
+  //material_left = Metal{Vector{0.8, 0.6, 0.2}, 1.0}
   material_right = Metal{Vector{0.8, 0.6, 0.2}, 1.0}
 
   world := [4]Hittable{

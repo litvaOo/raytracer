@@ -29,8 +29,26 @@ metal_scatter :: proc (ray_in: ^Ray, hit_rec: ^HitRecord, attenuation: ^Vector, 
   return vector_dot(scattered.direction, &hit_rec.normal) > 0
 }
 
+Dielectric :: struct {
+  refraction_index: f64,
+}
+
+dielectric_scatter :: proc(ray_in: ^Ray, hit_rec: ^HitRecord, attenuation: ^Vector, scattered: ^Ray, material: ^Dielectric) -> bool {
+  attenuation^ = Vector{1.0, 1.0, 1.0}
+  ri := hit_rec.front_face ? (1.0/material.refraction_index) : material.refraction_index
+  unit_direction := new(Vector)
+  unit_direction^ = unit_vector(ray_in.direction)
+  refracted := new(Vector)
+  refracted^ = refract(unit_direction, &hit_rec.normal, ri)
+  scattered := new(Ray)
+  scattered^ = Ray{&hit_rec.p, refracted}
+  return true
+}
+
 Material :: union {
  Lambertian,
- Metal
+ Metal,
+ Dielectric,
 }
+
 
