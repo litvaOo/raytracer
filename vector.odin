@@ -54,3 +54,13 @@ random_on_hemisphere :: proc(normal: ^Vector) -> Vector {
   }
   return -on_unit_sphere
 }
+
+near_zero :: proc(vec: ^Vector) -> bool {
+  s := 1e-8
+
+  return abs(vec.x) < s && abs(vec.y) < s && abs(vec.z) < s
+}
+
+reflect :: proc(vec: ^Vector, normal: ^Vector) -> Vector {
+  return vec^ - 2*vector_dot(vec, normal)*normal^
+}

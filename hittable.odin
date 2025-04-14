@@ -7,6 +7,7 @@ HitRecord :: struct {
   normal: Vector,
   t: f64,
   front_face: bool,
+  material: ^Material,
 }
 
 set_face_normal :: proc(hit_rec: ^HitRecord, ray: ^Ray, outward_normal: ^Vector) {
@@ -18,6 +19,7 @@ set_face_normal :: proc(hit_rec: ^HitRecord, ray: ^Ray, outward_normal: ^Vector)
 Sphere :: struct {
   center: Vector,
   radius: f64,
+  material: ^Material,
 }
 
 sphere_hit :: proc (sphere: ^Sphere, ray: ^Ray, ray_t_min: f64, ray_t_max: f64, rec: ^HitRecord) -> bool {
@@ -42,6 +44,7 @@ sphere_hit :: proc (sphere: ^Sphere, ray: ^Ray, ray_t_min: f64, ray_t_max: f64, 
   rec.t = root
   rec.p = ray_at(ray, rec.t)
   rec.normal = (rec.p - sphere.center) / sphere.radius
+  rec.material = sphere.material
   outward_normal := (rec.p - sphere.center) / sphere.radius
   set_face_normal(rec, ray, &outward_normal)
 
@@ -52,7 +55,7 @@ Hittable :: union {
   Sphere,
 }
 
-hittable_list_hit :: proc (hittable_list: ^[2]Hittable, ray: ^Ray, ray_t_min: f64, ray_t_max: f64, rec: ^HitRecord) -> bool {
+hittable_list_hit :: proc (hittable_list: ^[4]Hittable, ray: ^Ray, ray_t_min: f64, ray_t_max: f64, rec: ^HitRecord) -> bool {
   temp_rec := HitRecord{}
   hit_anything := false
   closest_hit := ray_t_max
@@ -67,6 +70,7 @@ hittable_list_hit :: proc (hittable_list: ^[2]Hittable, ray: ^Ray, ray_t_min: f6
           rec.normal = temp_rec.normal
           rec.t = temp_rec.t
           rec.front_face = temp_rec.front_face
+          rec.material = temp_rec.material
         }
     }
   }

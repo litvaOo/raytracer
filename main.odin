@@ -55,9 +55,17 @@ main :: proc() {
   viewport_upper_left := camera_center - Vector{0, 0, FOCAL_LENGTH} - viewport_u/2 - viewport_v/2 
   pixel_xy_loc := viewport_upper_left + 0.5*(pixel_delta_u+pixel_delta_v)
 
-  world := [2]Hittable{
-    Sphere{Vector{0, 0, -1}, 0.5},
-    Sphere{Vector{0, -100.5, -1}, 100}
+  material_ground, material_center, material_left, material_right : Material
+  material_ground = Lambertian{Vector{0.8, 0.8, 0.0}}
+  material_center = Lambertian{Vector{0.1, 0.2, 0.5}}
+  material_left = Metal{Vector{0.8, 0.8, 0.8}}
+  material_right = Metal{Vector{0.8, 0.6, 0.2}}
+
+  world := [4]Hittable{
+    Sphere{Vector{0, -100.5, -1}, 100, &material_ground},
+    Sphere{Vector{0, 0, -1.2}, 0.5, &material_center},
+    Sphere{Vector{-1.0, 0.0, -1.0}, 0.5, &material_left},
+    Sphere{Vector{1.0, 0.0, -1.0}, 0.5, &material_right},
   }
 
   for j := 0; j < WINDOW_HEIGHT; j += 1 {
@@ -76,6 +84,6 @@ main :: proc() {
     sdl3.RenderPresent(renderer)
   }
   sdl3.RenderPresent(renderer)
-  
+
   sdl3.Delay(1000)
 }
