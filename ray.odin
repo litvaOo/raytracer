@@ -23,17 +23,19 @@ get_ray :: proc(i, j: f64, pixel_xy_loc, pixel_delta_v, pixel_delta_u: Vector, c
 
 ray_color :: proc(ray: ^Ray, world: ^[2]Hittable) -> Vector {
   hit_rec := HitRecord{}
-  ray_color: Vector
+  new_ray_color: Vector
   if hittable_list_hit(world, ray, 0, math.F64_MAX, &hit_rec) == true {
-    ray_color = 0.5 * (hit_rec.normal + Vector{1, 1, 1}) 
+    direction := random_on_hemisphere(&hit_rec.normal)
+    new_ray := Ray{&hit_rec.p, &direction}
+    new_ray_color = 0.5 * ray_color(&new_ray, world)
   } else {
     unit_direction := unit_vector(ray.direction)
     a := 0.5*(unit_direction.y + 1.0)
-    ray_color = (1.0-a)*Vector{1.0, 1.0, 1.0} + a*Vector{0.5, 0.7, 1.0}
+    new_ray_color = (1.0-a)*Vector{1.0, 1.0, 1.0} + a*Vector{0.5, 0.7, 1.0}
   }
-  ray_color.r = clamp(ray_color.r, 0.000, 0.999)
-  ray_color.g = clamp(ray_color.g, 0.000, 0.999)
-  ray_color.b = clamp(ray_color.b, 0.000, 0.999)
-  return ray_color
+  new_ray_color.r = clamp(new_ray_color.r, 0.000, 0.999)
+  new_ray_color.g = clamp(new_ray_color.g, 0.000, 0.999)
+  new_ray_color.b = clamp(new_ray_color.b, 0.000, 0.999)
+  return new_ray_color
 }
 

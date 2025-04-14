@@ -1,5 +1,6 @@
 package raytracer
 
+import "core:math/rand"
 import "core:math"
 
 Vector :: distinct[3]f64
@@ -28,3 +29,28 @@ vector_dot :: proc(v1: ^Vector, v2: ^Vector) -> f64 {
   return v1.x*v2.x + v1.y*v2.y + v1.z*v2.z
 }
 
+vector_random :: proc() -> Vector {
+  return Vector{rand.float64(),rand.float64(),rand.float64()}
+}
+
+vector_random_interval :: proc(min, max: f64) -> Vector {
+  return Vector{random_float(min, max), random_float(min, max), random_float(min, max)}
+}
+
+random_unit_vector :: proc() -> Vector {
+  for {
+    p := vector_random()
+    lensq := vector_length_squared(&p)
+    if 1e-160 < lensq && lensq <= 1 {
+      return p / math.sqrt(lensq)
+    }
+  }
+}
+
+random_on_hemisphere :: proc(normal: ^Vector) -> Vector {
+  on_unit_sphere := random_unit_vector()
+  if vector_dot(&on_unit_sphere, normal) > 0.0 {
+    return on_unit_sphere
+  }
+  return -on_unit_sphere
+}
