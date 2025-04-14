@@ -17,14 +17,16 @@ lambertian_scatter :: proc (ray_in: ^Ray, hit_rec: ^HitRecord, attenuation: ^Vec
 
 Metal :: struct {
   albedo: Vector,
+  fuzz: f64,
 }
 
 metal_scatter :: proc (ray_in: ^Ray, hit_rec: ^HitRecord, attenuation: ^Vector, scattered: ^Ray, material: ^Metal) -> bool {
   reflected := new(Vector)
   reflected^ = reflect(ray_in.direction, &hit_rec.normal)
+  reflected^ = unit_vector(reflected) + (material.fuzz * random_unit_vector())
   scattered^ = Ray{&hit_rec.p, reflected}
   attenuation^ = material.albedo
-  return true
+  return vector_dot(scattered.direction, &hit_rec.normal) > 0
 }
 
 Material :: union {
