@@ -64,7 +64,6 @@ hittable_list_hit :: proc (hittable_list: ^[4]Hittable, ray: ^Ray, ray_t_min: f6
   temp_rec := HitRecord{}
   hit_anything := false
   closest_hit := ray_t_max
-
   for hittable in hittable_list {
     switch &hit in hittable {
       case Sphere:

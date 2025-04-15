@@ -40,7 +40,6 @@ dielectric_scatter :: proc(ray_in: ^Ray, hit_rec: ^HitRecord, attenuation: ^Vect
   unit_direction^ = unit_vector(ray_in.direction)
   refracted := new(Vector)
   refracted^ = refract(unit_direction, &hit_rec.normal, ri)
-  scattered := new(Ray)
   scattered^ = Ray{&hit_rec.p, refracted}
   return true
 }
