@@ -42,3 +42,7 @@ convert_vector_to_color :: proc(vec: ^Vector) -> u32 {
   return u32(vec.r) << 24 | u32(vec.g) << 16 | u32(vec.b) << 8 | 255
 }
 
+defocus_disk_sample :: proc(camera_center, defocus_disk_v, defocus_disk_u: ^Vector) -> Vector {
+  p := random_in_unit_disk()
+  return camera_center^ + (p.x * defocus_disk_u^) + (p.y * defocus_disk_v^) 
+}

@@ -72,3 +72,12 @@ refract :: proc(uv, normal: ^Vector, etai_over_etat: f64) -> Vector {
   r_out_parallel := -math.sqrt(abs(1.0 - vector_length_squared(&r_out_perpendicular))) * normal^
   return r_out_perpendicular + r_out_parallel
 }
+
+random_in_unit_disk :: proc() -> Vector {
+  for {
+    p: = Vector{random_float(-1, 1), random_float(-1, 1), 0}
+    if vector_length_squared(&p) < 1 {
+      return p
+    }
+  }
+}

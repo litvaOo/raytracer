@@ -46,11 +46,14 @@ main :: proc() {
 
   look_vector := look_from - look_at
 
-  focal_length := vector_length(&look_vector)
+  defocus_angle := 10.0
+  focus_distance := 3.4
+
+  //focal_length := vector_length(&look_vector)
 
   theta := math.to_radians_f64(VERTICAL_FOV)
   h := math.tan_f64(theta/2)
-  viewport_height := 2 * h * focal_length
+  viewport_height := 2 * h * focus_distance
   viewport_width := viewport_height * (WINDOW_WIDTH/WINDOW_HEIGHT)
 
   camera_center := look_from
@@ -68,10 +71,13 @@ main :: proc() {
 
   // calculate top-left pixel position
   //viewport_upper_left := camera_center - Vector{0, 0, FOCAL_LENGTH} - viewport_u/2 - viewport_v/2 
-  viewport_upper_left := camera_center - (focal_length * w) - viewport_u/2 - viewport_v/2
+  //viewport_upper_left := camera_center - (focal_length * w) - viewport_u/2 - viewport_v/2
+  viewport_upper_left := camera_center - (focus_distance * w) - viewport_u/2 - viewport_v/2
   pixel_xy_loc := viewport_upper_left + 0.5*(pixel_delta_u+pixel_delta_v)
 
-
+  defocus_radius := focus_distance * math.tan_f64(math.to_radians_f64(defocus_angle/2))
+  defocus_disk_u := u * defocus_radius
+  defocus_disk_v := v * defocus_radius
 
   material_ground, material_center, material_left, material_right, material_bubble : Material
   material_ground = Lambertian{Vector{0.8, 0.8, 0.0}}
@@ -88,21 +94,11 @@ main :: proc() {
     Sphere{Vector{1.0, 0.0, -1.0}, 0.5, &material_right},
   }
 
-  //R := math.cos_f64(math.PI/4)
-  //material_left, material_right : Material
-  //material_left = Lambertian{Vector{0, 0, 1}}
-  //material_right = Lambertian{Vector{1, 0, 0}}
-  //
-  //world := []Hittable{
-  //  Sphere{Vector{-R, 0, -1}, R, &material_left},
-  //  Sphere{Vector{R, 0, -1}, R, &material_right}
-  //}
-
   for j := 0; j < WINDOW_HEIGHT; j += 1 {
     for i := 0; i < WINDOW_WIDTH; i += 1 {
       pixel_color_vector := Vector{0, 0, 0}
       for sample := 0; sample < SAMPLES_PER_PIXEL; sample += 1 {
-        ray := get_ray(f64(i), f64(j), pixel_xy_loc, pixel_delta_u, pixel_delta_v, &camera_center)
+        ray := get_ray(f64(i), f64(j), defocus_angle, pixel_xy_loc, pixel_delta_u, pixel_delta_v, &camera_center, &defocus_disk_v, &defocus_disk_u)
         pixel_color_vector += ray_color(&ray, world, MAX_DEPTH)
       }
       pixel_color_vector *= PIXEL_SAMPLE_SCALE
