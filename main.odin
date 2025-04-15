@@ -10,8 +10,6 @@ ASPECT_RATIO :: 16.0 / 9.0
 WINDOW_WIDTH :: 1600.0
 WINDOW_HEIGHT :: WINDOW_WIDTH/ASPECT_RATIO
 
-FOCAL_LENGTH :: 1.0
-
 SAMPLES_PER_PIXEL :: 10
 PIXEL_SAMPLE_SCALE :: 1.0/SAMPLES_PER_PIXEL
 
@@ -41,53 +39,64 @@ main :: proc() {
     WINDOW_WIDTH,
     WINDOW_HEIGHT) 
 
-
-
   // CAMERA
+  look_from := Vector{-2, 2, 1}
+  look_at := Vector{0, 0, -1}
+  v_up := Vector{0, 1, 0}
+
+  look_vector := look_from - look_at
+
+  focal_length := vector_length(&look_vector)
+
   theta := math.to_radians_f64(VERTICAL_FOV)
   h := math.tan_f64(theta/2)
-  viewport_height := 2 * h * FOCAL_LENGTH
+  viewport_height := 2 * h * focal_length
   viewport_width := viewport_height * (WINDOW_WIDTH/WINDOW_HEIGHT)
 
-  camera_center := Vector{0, 0, 0}
+  camera_center := look_from
+  w := unit_vector(&look_vector)
+  w_v_up_cross := vector_cross(&v_up, &w)
+  u := unit_vector(&w_v_up_cross)
+  v := vector_cross(&w, &u)
 
-  viewport_u := Vector{viewport_width, 0, 0}   // left to right
-  viewport_v := Vector{0, -viewport_height, 0} // top to bottom
+  viewport_u := viewport_width * u   // left to right
+  viewport_v := viewport_height * -v // top to bottom
 
   // pixel-to-pixel distance
   pixel_delta_u := viewport_u/WINDOW_WIDTH
   pixel_delta_v := viewport_v/WINDOW_HEIGHT
 
   // calculate top-left pixel position
-  viewport_upper_left := camera_center - Vector{0, 0, FOCAL_LENGTH} - viewport_u/2 - viewport_v/2 
+  //viewport_upper_left := camera_center - Vector{0, 0, FOCAL_LENGTH} - viewport_u/2 - viewport_v/2 
+  viewport_upper_left := camera_center - (focal_length * w) - viewport_u/2 - viewport_v/2
   pixel_xy_loc := viewport_upper_left + 0.5*(pixel_delta_u+pixel_delta_v)
 
 
 
-  //material_ground, material_center, material_left, material_right, material_bubble : Material
-  //material_ground = Lambertian{Vector{0.8, 0.8, 0.0}}
-  //material_center = Lambertian{Vector{0.1, 0.2, 0.5}}
-  //material_left = Dielectric{1.50}
-  //material_bubble = Dielectric{1.00/1.50}
-  //material_right = Metal{Vector{0.8, 0.6, 0.2}, 1.0}
-  //
-  //world := []Hittable{
-  //  Sphere{Vector{0, -100.5, -1}, 100, &material_ground},
-  //  Sphere{Vector{0, 0, -1.2}, 0.5, &material_center},
-  //  Sphere{Vector{-1.0, 0.0, -1.0}, 0.5, &material_left},
-  //  Sphere{Vector{-1.0, 0.0, -1.0}, 0.4, &material_bubble},
-  //  Sphere{Vector{1.0, 0.0, -1.0}, 0.5, &material_right},
-  //}
-
-  R := math.cos_f64(math.PI/4)
-  material_left, material_right : Material
-  material_left = Lambertian{Vector{0, 0, 1}}
-  material_right = Lambertian{Vector{1, 0, 0}}
+  material_ground, material_center, material_left, material_right, material_bubble : Material
+  material_ground = Lambertian{Vector{0.8, 0.8, 0.0}}
+  material_center = Lambertian{Vector{0.1, 0.2, 0.5}}
+  material_left = Dielectric{1.50}
+  material_bubble = Dielectric{1.00/1.50}
+  material_right = Metal{Vector{0.8, 0.6, 0.2}, 1.0}
 
   world := []Hittable{
-    Sphere{Vector{-R, 0, -1}, R, &material_left},
-    Sphere{Vector{R, 0, -1}, R, &material_right}
+    Sphere{Vector{0, -100.5, -1}, 100, &material_ground},
+    Sphere{Vector{0, 0, -1.2}, 0.5, &material_center},
+    Sphere{Vector{-1.0, 0.0, -1.0}, 0.5, &material_left},
+    Sphere{Vector{-1.0, 0.0, -1.0}, 0.4, &material_bubble},
+    Sphere{Vector{1.0, 0.0, -1.0}, 0.5, &material_right},
   }
+
+  //R := math.cos_f64(math.PI/4)
+  //material_left, material_right : Material
+  //material_left = Lambertian{Vector{0, 0, 1}}
+  //material_right = Lambertian{Vector{1, 0, 0}}
+  //
+  //world := []Hittable{
+  //  Sphere{Vector{-R, 0, -1}, R, &material_left},
+  //  Sphere{Vector{R, 0, -1}, R, &material_right}
+  //}
 
   for j := 0; j < WINDOW_HEIGHT; j += 1 {
     for i := 0; i < WINDOW_WIDTH; i += 1 {
