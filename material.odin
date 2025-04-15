@@ -1,5 +1,8 @@
 package raytracer
 
+import "core:math"
+import "core:math/rand"
+
 Lambertian :: struct {
   albedo: Vector,
 }
@@ -37,11 +40,29 @@ dielectric_scatter :: proc(ray_in: ^Ray, hit_rec: ^HitRecord, attenuation: ^Vect
   attenuation^ = Vector{1.0, 1.0, 1.0}
   ri := hit_rec.front_face ? (1.0/material.refraction_index) : material.refraction_index
   unit_direction := new(Vector)
-  unit_direction^ = unit_vector(ray_in.direction)
-  refracted := new(Vector)
-  refracted^ = refract(unit_direction, &hit_rec.normal, ri)
-  scattered^ = Ray{&hit_rec.p, refracted}
+  unit_direction^ = -unit_vector(ray_in.direction)
+  
+  cos_theta := min(vector_dot(unit_direction, &hit_rec.normal), 1.0)
+  sin_theta := math.sqrt(1.0 - cos_theta*cos_theta)
+  unit_direction^ = -unit_direction^
+
+  cannot_refract := ri * sin_theta > 1.0
+  direction := new(Vector)
+
+  if cannot_refract == true || reflectance(cos_theta, ri) > rand.float64(){
+    direction^ = reflect(unit_direction, &hit_rec.normal)
+  } else {
+    direction^ = refract(unit_direction, &hit_rec.normal, ri)
+  }
+
+  scattered^ = Ray{&hit_rec.p, direction}
   return true
+}
+
+reflectance :: proc (cosine, refraction_index: f64) -> f64{
+  r0 := (1 - refraction_index) / (1 + refraction_index)
+  r0 *= r0
+  return r0 + (1-r0)*math.pow((1-cosine), 5)
 }
 
 Material :: union {

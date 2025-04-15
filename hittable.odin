@@ -60,7 +60,7 @@ Hittable :: union {
   Sphere,
 }
 
-hittable_list_hit :: proc (hittable_list: ^[4]Hittable, ray: ^Ray, ray_t_min: f64, ray_t_max: f64, rec: ^HitRecord) -> bool {
+hittable_list_hit :: proc (hittable_list: []Hittable, ray: ^Ray, ray_t_min: f64, ray_t_max: f64, rec: ^HitRecord) -> bool {
   temp_rec := HitRecord{}
   hit_anything := false
   closest_hit := ray_t_max
