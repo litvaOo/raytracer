@@ -22,7 +22,7 @@ get_ray :: proc(i, j, defocus_angle: f64, pixel_xy_loc, pixel_delta_v, pixel_del
   return Ray{ray_origin, ray_direction} 
 }
 
-ray_color :: proc(ray: ^Ray, world: []Hittable, depth: u32) -> Vector {
+ray_color :: proc(ray: ^Ray, world: [dynamic]Hittable, depth: u32) -> Vector {
   if depth <= 0 {
     return Vector{0, 0, 0}
   }
