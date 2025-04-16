@@ -13,7 +13,7 @@ ASPECT_RATIO :: 16.0 / 9.0
 WINDOW_WIDTH :: 1600.0
 WINDOW_HEIGHT :: WINDOW_WIDTH/ASPECT_RATIO
 
-SAMPLES_PER_PIXEL :: 5
+SAMPLES_PER_PIXEL :: 50
 PIXEL_SAMPLE_SCALE :: 1.0/SAMPLES_PER_PIXEL
 
 MAX_DEPTH :: 50
@@ -130,8 +130,10 @@ main :: proc() {
   append(&world, Sphere{Vector{-4, 1, 0}, 1.0, &material_2})
   append(&world, Sphere{Vector{4, 1, 0}, 1.0, &material_3})
 
+  //fmt.printf("%fx%f\n", WINDOW_WIDTH, WINDOW_HEIGHT)
+  //fmt.printf("%f", WINDOW_HEIGHT/12 + (8-((int(WINDOW_HEIGHT/12))%8)))
   threadPool := make([dynamic]^thread.Thread, 0)
-  for i := 0; i < WINDOW_HEIGHT; i += WINDOW_HEIGHT/12 {
+  for i := 0; i < WINDOW_HEIGHT; i += WINDOW_HEIGHT/12 + (8-((int(WINDOW_HEIGHT/12))%8)) {
     thr := thread.create(worker)
     data := ThreadData{
       i, i+WINDOW_HEIGHT/12, defocus_angle,
