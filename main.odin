@@ -3,20 +3,32 @@ package raytracer
 import "core:fmt"
 import "core:math"
 import "core:math/rand"
+import "core:thread"
 import "core:strings"
 import "vendor:sdl3"
+import vmem "core:mem/virtual"
 
 ASPECT_RATIO :: 16.0 / 9.0
 
 WINDOW_WIDTH :: 1600.0
 WINDOW_HEIGHT :: WINDOW_WIDTH/ASPECT_RATIO
 
-SAMPLES_PER_PIXEL :: 50
+SAMPLES_PER_PIXEL :: 5
 PIXEL_SAMPLE_SCALE :: 1.0/SAMPLES_PER_PIXEL
 
 MAX_DEPTH :: 50
 
 VERTICAL_FOV :: 20.0
+
+ThreadData :: struct {
+  start, end: int,
+  defocus_angle: f64,
+  pixel_xy_loc, pixel_delta_u, pixel_delta_v: Vector,
+  camera_center, defocus_disk_v, defocus_disk_u: ^Vector,
+  world: [dynamic]Hittable,
+  color_buffer: [dynamic]u32,
+
+}
 
 main :: proc() {
   // SDL_INIT
@@ -78,20 +90,6 @@ main :: proc() {
   defocus_disk_u := u * defocus_radius
   defocus_disk_v := v * defocus_radius
 
-  //material_ground, material_center, material_left, material_right, material_bubble : Material
-  //material_ground = Lambertian{Vector{0.8, 0.8, 0.0}}
-  //material_center = Lambertian{Vector{0.1, 0.2, 0.5}}
-  //material_left = Dielectric{1.50}
-  //material_bubble = Dielectric{1.00/1.50}
-  //material_right = Metal{Vector{0.8, 0.6, 0.2}, 1.0}
-  //
-  //world := []Hittable{
-  //  Sphere{Vector{0, -100.5, -1}, 100, &material_ground},
-  //  Sphere{Vector{0, 0, -1.2}, 0.5, &material_center},
-  //  Sphere{Vector{-1.0, 0.0, -1.0}, 0.5, &material_left},
-  //  Sphere{Vector{-1.0, 0.0, -1.0}, 0.4, &material_bubble},
-  //  Sphere{Vector{1.0, 0.0, -1.0}, 0.5, &material_right},
-  //}
   ground_material : Material
   ground_material = Lambertian{Vector{0.5, 0.5, 0.5}}
 
@@ -132,22 +130,66 @@ main :: proc() {
   append(&world, Sphere{Vector{-4, 1, 0}, 1.0, &material_2})
   append(&world, Sphere{Vector{4, 1, 0}, 1.0, &material_3})
 
-  for j := 0; j < WINDOW_HEIGHT; j += 1 {
+  threadPool := make([dynamic]^thread.Thread, 0)
+  for i := 0; i < WINDOW_HEIGHT; i += WINDOW_HEIGHT/12 {
+    thr := thread.create(worker)
+    data := ThreadData{
+      i, i+WINDOW_HEIGHT/12, defocus_angle,
+      pixel_xy_loc, pixel_delta_u, pixel_delta_v,
+      &camera_center, &defocus_disk_v, &defocus_disk_u,
+      world, color_buffer,
+    }
+    if thr != nil {
+      thr.init_context = context
+      thr.user_index = i
+      thr.data = &data
+      append(&threadPool, thr)
+
+      thread.start(thr)
+    }
+  }
+    for len(threadPool) > 0 {
+        for i := 0; i < len(threadPool); {
+            t := threadPool[i]
+            if thread.is_done(t) {
+                thread.destroy(t)
+                ordered_remove(&threadPool, i)
+            } else {
+                i += 1 
+            }
+        }
+    }
+  sdl3.UpdateTexture(texture, nil, raw_data(color_buffer), WINDOW_WIDTH*size_of(u32))
+  sdl3.RenderTexture(renderer, texture, nil, nil)
+  sdl3.RenderPresent(renderer)
+  sdl3.Delay(1000)
+}
+
+worker :: proc(t: ^thread.Thread) {
+  thread_data := (cast(^ThreadData)t.data)
+  arena: vmem.Arena
+  arena_alloc := vmem.arena_allocator(&arena)
+  for j := min(thread_data.start, WINDOW_HEIGHT); j < min(thread_data.end, WINDOW_HEIGHT); j += 1{ 
     for i := 0; i < WINDOW_WIDTH; i += 1 {
       pixel_color_vector := Vector{0, 0, 0}
       for sample := 0; sample < SAMPLES_PER_PIXEL; sample += 1 {
-        ray := get_ray(f64(i), f64(j), defocus_angle, pixel_xy_loc, pixel_delta_u, pixel_delta_v, &camera_center, &defocus_disk_v, &defocus_disk_u)
-        pixel_color_vector += ray_color(&ray, world, MAX_DEPTH)
+        ray := get_ray(
+               f64(i),
+               f64(j),
+               thread_data.defocus_angle,
+               thread_data.pixel_xy_loc,
+               thread_data.pixel_delta_u,
+               thread_data.pixel_delta_v,
+               thread_data.camera_center,
+               thread_data.defocus_disk_v,
+               thread_data.defocus_disk_u,
+               arena_alloc)
+        pixel_color_vector += ray_color(&ray, thread_data.world, MAX_DEPTH, arena_alloc)
       }
       pixel_color_vector *= PIXEL_SAMPLE_SCALE
       pixel_color := convert_vector_to_color(&pixel_color_vector)
-      color_buffer[WINDOW_WIDTH*j+i] = pixel_color
+      thread_data.color_buffer[WINDOW_WIDTH*j+i] = pixel_color
     }
-    sdl3.UpdateTexture(texture, nil, raw_data(color_buffer), WINDOW_WIDTH*size_of(u32))
-    sdl3.RenderTexture(renderer, texture, nil, nil)
-    sdl3.RenderPresent(renderer)
-  }
-  sdl3.RenderPresent(renderer)
-
-  sdl3.Delay(1000)
+    vmem.arena_free_all(&arena)
+  }  
 }

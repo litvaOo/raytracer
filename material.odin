@@ -2,13 +2,14 @@ package raytracer
 
 import "core:math"
 import "core:math/rand"
+import "base:runtime"
 
 Lambertian :: struct {
   albedo: Vector,
 }
 
-lambertian_scatter :: proc (ray_in: ^Ray, hit_rec: ^HitRecord, attenuation: ^Vector, scattered: ^Ray, material: ^Lambertian) -> bool{
-  scatter_direction := new(Vector)
+lambertian_scatter :: proc (ray_in: ^Ray, hit_rec: ^HitRecord, attenuation: ^Vector, scattered: ^Ray, material: ^Lambertian, arena_alloc: runtime.Allocator) -> bool{
+  scatter_direction := new(Vector, arena_alloc)
   scatter_direction^ = hit_rec.normal + random_unit_vector()
   if near_zero(scatter_direction) == true {
     scatter_direction^ = hit_rec.normal
@@ -23,8 +24,8 @@ Metal :: struct {
   fuzz: f64,
 }
 
-metal_scatter :: proc (ray_in: ^Ray, hit_rec: ^HitRecord, attenuation: ^Vector, scattered: ^Ray, material: ^Metal) -> bool {
-  reflected := new(Vector)
+metal_scatter :: proc (ray_in: ^Ray, hit_rec: ^HitRecord, attenuation: ^Vector, scattered: ^Ray, material: ^Metal, arena_alloc: runtime.Allocator) -> bool {
+  reflected := new(Vector, arena_alloc)
   reflected^ = reflect(ray_in.direction, &hit_rec.normal)
   reflected^ = unit_vector(reflected) + (material.fuzz * random_unit_vector())
   scattered^ = Ray{&hit_rec.p, reflected}
@@ -36,10 +37,10 @@ Dielectric :: struct {
   refraction_index: f64,
 }
 
-dielectric_scatter :: proc(ray_in: ^Ray, hit_rec: ^HitRecord, attenuation: ^Vector, scattered: ^Ray, material: ^Dielectric) -> bool {
+dielectric_scatter :: proc(ray_in: ^Ray, hit_rec: ^HitRecord, attenuation: ^Vector, scattered: ^Ray, material: ^Dielectric, arena_alloc: runtime.Allocator) -> bool {
   attenuation^ = Vector{1.0, 1.0, 1.0}
   ri := hit_rec.front_face ? (1.0/material.refraction_index) : material.refraction_index
-  unit_direction := new(Vector)
+  unit_direction := new(Vector, arena_alloc)
   unit_direction^ = -unit_vector(ray_in.direction)
   
   cos_theta := min(vector_dot(unit_direction, &hit_rec.normal), 1.0)
@@ -47,7 +48,7 @@ dielectric_scatter :: proc(ray_in: ^Ray, hit_rec: ^HitRecord, attenuation: ^Vect
   unit_direction^ = -unit_direction^
 
   cannot_refract := ri * sin_theta > 1.0
-  direction := new(Vector)
+  direction := new(Vector, arena_alloc)
 
   if cannot_refract == true || reflectance(cos_theta, ri) > rand.float64(){
     direction^ = reflect(unit_direction, &hit_rec.normal)
