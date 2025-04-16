@@ -2,6 +2,7 @@ package raytracer
 
 import "core:math"
 import "core:fmt"
+import "base:runtime"
 
 HitRecord :: struct {
   p: Vector,
