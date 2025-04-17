@@ -15,11 +15,11 @@ ray_at :: proc(r: ^Ray, t: f64) -> Vector {
 
 get_ray :: proc(
     i, j, defocus_angle: f64,
-    pixel_xy_loc, pixel_delta_v, pixel_delta_u: Vector,
+    pixel_xy_loc, pixel_delta_v, pixel_delta_u,
     center, defocus_disk_v, defocus_disk_u: ^Vector,
     arena_alloc: runtime.Allocator) -> Ray {
   offset := sample_square()
-  pixel_sample := pixel_xy_loc + ((j + offset.x) * pixel_delta_u) + ((i + offset.y) * pixel_delta_v)
+  pixel_sample := pixel_xy_loc^ + ((j + offset.x) * pixel_delta_u^) + ((i + offset.y) * pixel_delta_v^)
   ray_origin := new(Vector, arena_alloc)
   ray_origin^ = (defocus_angle <= 0) ? center^ : defocus_disk_sample(center, defocus_disk_v, defocus_disk_u)
   ray_direction := new(Vector, arena_alloc)
