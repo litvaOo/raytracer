@@ -3,6 +3,7 @@ package raytracer
 import "core:fmt"
 import "core:math"
 import "base:runtime"
+
 Ray :: struct {
   origin: ^Vector,
   direction: ^Vector,
@@ -12,9 +13,9 @@ ray_at :: proc(r: ^Ray, t: f64) -> Vector {
   return r.origin^ + t*r.direction^
 }
 
-get_ray :: proc(i, j, defocus_angle: f64, pixel_xy_loc, pixel_delta_v, pixel_delta_u: Vector, center, defocus_disk_v, defocus_disk_u: ^Vector, alloc: runtime.Allocator) -> Ray {
+get_ray :: proc(i, j, defocus_angle: f64, pixel_xy_loc, pixel_delta_v, pixel_delta_u, center, defocus_disk_v, defocus_disk_u: ^Vector, alloc: runtime.Allocator) -> Ray {
   offset := sample_square()
-  pixel_sample := pixel_xy_loc + ((j + offset.x) * pixel_delta_u) + ((i + offset.y) * pixel_delta_v)
+  pixel_sample := pixel_xy_loc^ + ((j + offset.x) * pixel_delta_u^) + ((i + offset.y) * pixel_delta_v^)
   ray_origin := new(Vector, alloc)
   ray_origin^ = (defocus_angle <= 0) ? center^ : defocus_disk_sample(center, defocus_disk_v, defocus_disk_u)
   ray_direction := new(Vector, alloc)
