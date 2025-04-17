@@ -2,6 +2,7 @@ package raytracer
 
 import "core:fmt"
 import "core:math"
+import "core:os"
 import "core:math/rand"
 import "core:thread"
 import "core:strings"
@@ -130,12 +131,13 @@ main :: proc() {
   append(&world, Sphere{Vector{-4, 1, 0}, 1.0, &material_2})
   append(&world, Sphere{Vector{4, 1, 0}, 1.0, &material_3})
 
-  threadPool := make([dynamic]^thread.Thread, 0)
-  for i := 0; i < WINDOW_HEIGHT; i += WINDOW_HEIGHT/30 + (16-((int(WINDOW_HEIGHT/30))%16)) {
+  thread_pool := make([dynamic]^thread.Thread, 0)
+  thread_count := int(WINDOW_HEIGHT)/os.processor_core_count()
+  for i := 0; i < WINDOW_HEIGHT; i += thread_count {
     thr := thread.create(worker)
     data := new(ThreadData)
     data ^= ThreadData{
-      i, i+WINDOW_HEIGHT/30 + (16-((int(WINDOW_HEIGHT/30))%16)), defocus_angle,
+      i, i+thread_count, defocus_angle,
       &pixel_xy_loc, &pixel_delta_u, &pixel_delta_v,
       &camera_center, &defocus_disk_v, &defocus_disk_u,
       world, color_buffer,
@@ -144,17 +146,17 @@ main :: proc() {
       thr.init_context = context
       thr.user_index = i
       thr.data = data
-      append(&threadPool, thr)
+      append(&thread_pool, thr)
 
       thread.start(thr)
     }
   }
-    for len(threadPool) > 0 {
-        for i := 0; i < len(threadPool); {
-            t := threadPool[i]
+    for len(thread_pool) > 0 {
+        for i := 0; i < len(thread_pool); {
+            t := thread_pool[i]
             if thread.is_done(t) {
                 thread.destroy(t)
-                ordered_remove(&threadPool, i)
+                ordered_remove(&thread_pool, i)
             } else {
                 i += 1 
             }
